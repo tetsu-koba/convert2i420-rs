@@ -10,8 +10,8 @@ pub fn i422_to_i420(i422_data: &[u8], i420_data: &mut [u8], width: u32, height: 
     i420_data[0..y_size].copy_from_slice(&i422_data[0..y_size]);
 
     // Copy the U and V planes
-    let (u_plane, v_plane) = i420_data[y_size..].split_at_mut((y_size / 4) as usize);
-    let (i422_u_plane, i422_v_plane) = i422_data[y_size..].split_at((y_size / 2) as usize);
+    let (u_plane, v_plane) = i420_data[y_size..].split_at_mut(y_size / 4);
+    let (i422_u_plane, i422_v_plane) = i422_data[y_size..].split_at(y_size / 2);
 
     let width = width as usize;
     let height = height as usize;

@@ -44,18 +44,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     loop {
-        if infile.read(&mut input_data)? != input_data.len() {
-            break;
+        if let Err(e) = infile.read_exact(&mut input_data) {
+            if e.kind() == std::io::ErrorKind::UnexpectedEof {
+                break;
+            }
+            return Err(e.into());
         }
         f(&input_data, &mut output_data, width, height);
 
         // Write to the output file
-        if let Err(err) = outfile.write_all(&output_data) {
-            if err.kind() == std::io::ErrorKind::BrokenPipe {
+        if let Err(e) = outfile.write_all(&output_data) {
+            if e.kind() == std::io::ErrorKind::BrokenPipe {
                 break;
-            } else {
-                return Err(err.into());
             }
+            return Err(e.into());
         }
     }
 

@@ -5,8 +5,8 @@ pub fn yuyv_to_i420(yuyv_data: &[u8], i420_data: &mut [u8], width: u32, height: 
     assert!(i420_data.len() >= (width * height * 3 / 2) as usize);
 
     let y_size = (width * height) as usize;
-    let u_base = y_size;
-    let v_base = y_size + (y_size / 4);
+    let (y_plane, uv_plane) = i420_data.split_at_mut(y_size);
+    let (u_plane, v_plane) = uv_plane.split_at_mut(y_size / 4);
 
     let mut uv_idx: usize = 0;
     let mut y = 0;
@@ -15,11 +15,11 @@ pub fn yuyv_to_i420(yuyv_data: &[u8], i420_data: &mut [u8], width: u32, height: 
         while x < width {
             let yuyv_idx = (y * width + x) as usize * 2;
 
-            i420_data[(y * width + x) as usize] = yuyv_data[yuyv_idx];
-            i420_data[(y * width + x + 1) as usize] = yuyv_data[yuyv_idx + 2];
+            y_plane[(y * width + x) as usize] = yuyv_data[yuyv_idx];
+            y_plane[(y * width + x + 1) as usize] = yuyv_data[yuyv_idx + 2];
             if y % 2 == 0 {
-                i420_data[u_base + uv_idx] = yuyv_data[yuyv_idx + 1];
-                i420_data[v_base + uv_idx] = yuyv_data[yuyv_idx + 3];
+                u_plane[uv_idx] = yuyv_data[yuyv_idx + 1];
+                v_plane[uv_idx] = yuyv_data[yuyv_idx + 3];
                 uv_idx += 1;
             }
             x += 2;

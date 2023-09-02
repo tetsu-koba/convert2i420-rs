@@ -1,5 +1,5 @@
 use std::env;
-use std::fs::{File, OpenOptions};
+use std::fs::File;
 use std::io::{Read, Write};
 use std::process;
 mod from_i422;
@@ -20,7 +20,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let mut infile = File::open(&args[1])?;
-    let mut outfile = OpenOptions::new().create(true).write(true).open(&args[2])?;
+    let mut outfile = File::create(&args[2])?;
     let width: u32 = args[3].parse()?;
     let height: u32 = args[4].parse()?;
     let pixel_format = &args[5].to_uppercase();

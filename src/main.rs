@@ -1,7 +1,6 @@
 use std::env;
 use std::fs::File;
-use std::io::{Read, Write};
-use std::os::fd::AsRawFd;
+use std::io::Read;
 use std::process;
 mod from_i422;
 mod from_nv12;
@@ -12,17 +11,12 @@ type ConvertFunc = fn(&[u8], &mut [u8], u32, u32);
 
 fn convert_to_i420(
     mut infile: File,
-    mut outfile: File,
+    outfile: File,
     width: u32,
     height: u32,
     pixel_format: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let is_pipe_output = if cfg!(linux) && pipe::is_pipe(outfile.as_raw_fd()) {
-        pipe::set_pipe_max_size(outfile.as_raw_fd())?;
-        true
-    } else {
-        false
-    };
+    let mut writer = pipe::Writer::new(outfile);
     let mut output_data = vec![0u8; (width * height * 3 / 2) as usize];
     let f: ConvertFunc;
     let mut input_data: Vec<u8>;
@@ -54,12 +48,7 @@ fn convert_to_i420(
         }
         f(&input_data, &mut output_data, width, height);
 
-        // Write to the output file
-        if let Err(e) = if is_pipe_output {
-            pipe::vmsplice_single_buffer(&output_data, outfile.as_raw_fd())
-        } else {
-            outfile.write_all(&output_data)
-        } {
+        if let Err(e) = writer.write_all(&output_data) {
             if e.kind() == std::io::ErrorKind::BrokenPipe {
                 break;
             }
